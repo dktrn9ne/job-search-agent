@@ -1,0 +1,10 @@
+data/private/
+data/raw/
+data/generated/
+*.docx
+*.pdf
+*.log
+.env
+.DS_Store
+Thumbs.db
+
