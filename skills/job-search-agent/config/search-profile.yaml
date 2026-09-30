@@ -1,12 +1,13 @@
+# Generic example only. Validate actual candidate constraints before use.
 search_profile:
   candidate_name: "USER"
   daily_target_matches:
     minimum: 30
     maximum: 60
   match_threshold:
-    minimum_percent: 85
-    preferred_percent: 90
-    top_match_percent: 99
+    minimum_points: 85
+    preferred_points: 90
+    top_match_points: 100
   target_roles:
     primary:
       - "Product Manager"
@@ -36,7 +37,9 @@ search_profile:
       - "US Pacific"
   compensation:
     minimum_base_usd: null
+    target_base_usd: null
     minimum_total_comp_usd: null
+  verification_max_age_hours: 72
   work_authorization:
     answer_source: "Ask user or use validated profile knowledge only."
   exclude:
@@ -49,6 +52,8 @@ search_profile:
   sources:
     preferred:
       - "Company career pages"
+      - "Ashby"
+      - "Greenhouse"
       - "LinkedIn"
       - "Wellfound"
       - "Built In"

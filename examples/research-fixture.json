@@ -1,0 +1,269 @@
+{
+  "policy": {
+    "minimum_base_usd": 120000,
+    "verification_max_age_hours": 72
+  },
+  "history": [
+    {
+      "company": "Previously Applied",
+      "title": "Product Manager",
+      "requisition_id": "Previously Applied",
+      "url": "https://careers.example.com/previously-applied",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      },
+      "status": "submitted"
+    }
+  ],
+  "jobs": [
+    {
+      "company": "Eligible",
+      "title": "Product Manager",
+      "requisition_id": "Eligible",
+      "url": "https://careers.example.com/eligible",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      }
+    },
+    {
+      "company": "OTE Only",
+      "title": "Product Manager",
+      "requisition_id": "OTE Only",
+      "url": "https://careers.example.com/ote-only",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "OTE",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      }
+    },
+    {
+      "company": "Hourly Contract",
+      "title": "Product Manager",
+      "requisition_id": "Hourly Contract",
+      "url": "https://careers.example.com/hourly-contract",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "contract",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "hour",
+        "minimum": 75,
+        "maximum": 90,
+        "source": "employer band",
+        "hours_per_week": 40,
+        "weeks_per_year": 52
+      }
+    },
+    {
+      "company": "State Restricted",
+      "title": "Product Manager",
+      "requisition_id": "State Restricted",
+      "url": "https://careers.example.com/state-restricted",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "fail",
+          "evidence": "Remote role explicitly excludes candidate state"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      }
+    },
+    {
+      "company": "Degree Unknown",
+      "title": "Product Manager",
+      "requisition_id": "Degree Unknown",
+      "url": "https://careers.example.com/degree-unknown",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "unknown",
+          "evidence": "Degree-or-equivalent clause requires documented equivalency assessment"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      }
+    },
+    {
+      "company": "Stale",
+      "title": "Product Manager",
+      "requisition_id": "Stale",
+      "url": "https://careers.example.com/stale",
+      "posting_status": "open",
+      "verified_at": "2026-09-01T12:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      }
+    },
+    {
+      "company": "Previously Applied",
+      "title": "Product Manager",
+      "requisition_id": "Previously Applied",
+      "url": "https://careers.example.com/previously-applied",
+      "posting_status": "open",
+      "verified_at": "2026-09-30T14:00:00Z",
+      "verification_source": "employer page",
+      "employment_type": "employee",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "verified proof"
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "verified proof"
+        }
+      },
+      "compensation": {
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "minimum": 130000,
+        "maximum": 180000,
+        "source": "employer band"
+      }
+    }
+  ]
+}
