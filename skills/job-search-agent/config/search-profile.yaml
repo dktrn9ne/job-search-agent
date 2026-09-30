@@ -1,0 +1,58 @@
+search_profile:
+  candidate_name: "USER"
+  daily_target_matches:
+    minimum: 30
+    maximum: 60
+  match_threshold:
+    minimum_percent: 85
+    preferred_percent: 90
+    top_match_percent: 99
+  target_roles:
+    primary:
+      - "Product Manager"
+      - "AI Product Manager"
+      - "Technical Product Manager"
+      - "Program Manager"
+    secondary:
+      - "Product Operations"
+      - "Strategy and Operations"
+      - "Customer Experience Product"
+  seniority:
+    include:
+      - "Senior"
+      - "Lead"
+      - "Principal"
+      - "Manager"
+    exclude:
+      - "Intern"
+      - "Entry Level"
+  location:
+    remote: true
+    hybrid: true
+    onsite: false
+    preferred_time_zones:
+      - "US Central"
+      - "US Eastern"
+      - "US Pacific"
+  compensation:
+    minimum_base_usd: null
+    minimum_total_comp_usd: null
+  work_authorization:
+    answer_source: "Ask user or use validated profile knowledge only."
+  exclude:
+    companies: []
+    industries: []
+    keywords:
+      - "commission only"
+      - "unpaid"
+      - "door to door"
+  sources:
+    preferred:
+      - "Company career pages"
+      - "LinkedIn"
+      - "Wellfound"
+      - "Built In"
+      - "ZipRecruiter"
+      - "Indeed"
+    referral_priority: true
+

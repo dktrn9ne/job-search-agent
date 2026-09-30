@@ -23,7 +23,7 @@ If source material is missing, proceed with the best available profile informati
 
 1. Source a daily pool of jobs from approved sources, prioritizing company pages and high-signal postings.
 2. Deduplicate by company, role, location, posting URL, and description similarity.
-3. Score each role from 0-100 using the match rubric in `workflow/match-scoring.md`.
+3. Score each role from 0-100 using the match rubric in [workflow/match-scoring.md](workflow/match-scoring.md).
 4. Keep 30-60 roles when possible, ordered from 99% to 85% fit.
 5. Reject roles below 85% unless the user explicitly asks for stretch opportunities.
 6. For each selected role, produce a concise fit rationale, risks, likely keywords, and recommended application strategy.
@@ -70,4 +70,3 @@ For each daily run, produce:
 - Application macros and question answers.
 - Submission checklist.
 - Updated application tracker.
-
