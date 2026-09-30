@@ -1,6 +1,7 @@
 # Ranked Job Matches
 
-| Rank | Score | Company | Role | Location | Source | Apply URL | Why It Fits | Risks | Next Action |
-|---:|---:|---|---|---|---|---|---|---|---|
-| 1 |  |  |  |  |  |  |  |  |  |
+Scores are prioritization points, not probabilities. Rank eligible roles separately from the review queue.
 
+| Rank | Points / 100 | Company | Role / Req ID | Gate Decision | Base Pay / Currency / Period | Location Constraints | Verified At / Source | Apply URL | Candidate Proof / Gaps | Status / Next Action |
+|---:|---:|---|---|---|---|---|---|---|---|---|
+| 1 | | | | | | | | | | |

@@ -9,7 +9,7 @@
 
 ## 2. Source Roles
 
-Target 30-60 roles per day at 85%-99% match.
+Use up to 30-60 researched roles as a budget, not a quota of qualified results. Return fewer if evidence does not support more.
 
 Preferred sourcing order:
 
@@ -26,7 +26,9 @@ Capture:
 - URL.
 - Location and remote/hybrid/onsite status.
 - Compensation if posted.
-- Date posted.
+- Date posted, current open/closed status, verification time and source.
+- Employer requisition ID and alternate board URLs.
+- Pay type (base/OTE/total), period, currency, and applicable location band.
 - Required qualifications.
 - Preferred qualifications.
 - Product/domain clues.
@@ -39,20 +41,20 @@ Remove:
 - Duplicate postings.
 - Roles already applied to.
 - Roles below the user's location or compensation constraints.
-- Roles requiring unverified credentials.
+- Roles with confirmed mandatory-credential mismatches. Put unknown qualifications in a separate review queue.
 - Postings with obvious scam or spam signals.
-- Roles below 85% match unless flagged as strategic stretch roles.
+- Roles below 85 rubric points unless flagged as strategic stretch roles.
 
 ## 4. Score Matches
 
-Use `workflow/match-scoring.md`.
+Apply hard gates and evidence scoring from `workflow/match-scoring.md`. Unknown gates stay in review regardless of score.
 
 Bucket results:
 
-- 95%-99%: Immediate priority.
-- 90%-94%: Strong apply.
-- 85%-89%: Good apply if volume target needs more roles or company is strategic.
-- Below 85%: Hold or reject.
+- 95–100 points: Immediate priority.
+- 90–94 points: Strong apply.
+- 85–89 points: Good evidence-backed fit; prioritize by usefulness, never quota.
+- Below 85 points: Hold or reject.
 
 ## 5. Tailor Materials
 
