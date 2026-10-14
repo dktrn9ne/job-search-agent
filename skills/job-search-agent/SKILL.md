@@ -5,6 +5,8 @@ description: Find and evidence-rank job opportunities, tailor truthful materials
 
 # Job Search Agent
 
+Read [domain context](references/domain-context.md) before research or tailoring. Require a complete posting-to-proof map for mandatory qualifications; an unknown mandatory condition stays in review even when fit points are high.
+
 ## Start with validated inputs
 
 Use the latest resume, user-confirmed profile, constraints, and application history. Repository examples are templates, not facts about the candidate. Separate hard requirements (base-pay floor, location, authorization) from targets and preferences. If a critical input is unavailable, continue research and put affected opportunities in a review queue.

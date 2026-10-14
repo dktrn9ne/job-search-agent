@@ -55,3 +55,6 @@ python3 skills/job-search-agent/scripts/check_jobs.py examples/research-fixture.
 ```
 
 The synthetic fixture covers eligible pay, OTE, hourly contracts, state restrictions, unknown degree equivalency, stale verification, and a prior application. It contains no live listings or candidate data. No network services or third-party packages are required for these checks.
+
+## Evidence context contract
+Read `context/domain_rules.md` and `context/table_guide.md` before running this workflow. Mandatory qualifications need requirement-to-proof records; unknowns stay in review. Deterministic checks validate structure, not source truth or model accuracy.
