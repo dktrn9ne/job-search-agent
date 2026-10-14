@@ -80,6 +80,19 @@ def check_job(job, policy, history, now):
             rejects.append(name + ": " + gate["evidence"])
         elif gate.get("status") != "pass" or not has_text(gate.get("evidence")):
             review.append(name + ": missing verified supporting evidence")
+    if policy.get("require_requirement_evidence"):
+        mapping = job.get("requirement_evidence")
+        if not isinstance(mapping, list) or not mapping:
+            review.append("Missing requirement-to-proof map")
+        else:
+            for item in mapping:
+                if not isinstance(item, dict) or not isinstance(item.get("required"), bool) or not has_text(item.get("requirement")) or item.get("assessment") not in {"met", "unknown", "unmet"}:
+                    review.append("Invalid requirement evidence record")
+                elif item["required"]:
+                    if item["assessment"] == "unmet" and has_text(item.get("candidate_evidence")) and has_text(item.get("source_ref")):
+                        rejects.append("Required condition unmet: " + item["requirement"])
+                    elif item["assessment"] != "met" or not has_text(item.get("candidate_evidence")) or not has_text(item.get("source_ref")):
+                        review.append("Required condition needs proof: " + item["requirement"])
     floor = policy.get("minimum_base_usd")
     if floor is not None:
         if not positive_number(floor):
