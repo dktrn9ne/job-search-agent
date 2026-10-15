@@ -1,0 +1,81 @@
+{
+  "minimum_base_usd": 110000,
+  "target_ceiling_usd": 360000,
+  "verification_max_age_hours": 24,
+  "minimum_fit_points": 85,
+  "daily_target_min": 30,
+  "daily_target_max": 60,
+  "location_priority": [
+    "Remote - United States",
+    "Hybrid - Central Texas"
+  ],
+  "employment_types": [
+    "employee",
+    "contract",
+    "temporary"
+  ],
+  "work_authorization": {
+    "authorized_in_united_states": true,
+    "requires_sponsorship_now_or_future": false
+  },
+  "target_roles": [
+    "AI Product Manager",
+    "Technical Product Manager",
+    "Senior Product Manager",
+    "AI Deployment Manager",
+    "AI Program Manager",
+    "Agentic AI Engineer",
+    "Senior AI Software Engineer"
+  ],
+  "source_priority": [
+    {
+      "name": "Greenhouse",
+      "domain": "greenhouse.io",
+      "mode": "direct_ats"
+    },
+    {
+      "name": "Lever",
+      "domain": "jobs.lever.co",
+      "mode": "direct_ats"
+    },
+    {
+      "name": "Ashby",
+      "domain": "jobs.ashbyhq.com",
+      "mode": "direct_ats"
+    },
+    {
+      "name": "Dice",
+      "domain": "dice.com",
+      "mode": "discovery"
+    },
+    {
+      "name": "ZipRecruiter",
+      "domain": "ziprecruiter.com",
+      "mode": "discovery"
+    },
+    {
+      "name": "Indeed",
+      "domain": "indeed.com",
+      "mode": "discovery"
+    },
+    {
+      "name": "LinkedIn",
+      "domain": "linkedin.com",
+      "mode": "lead_only",
+      "requires_external_application": true
+    },
+    {
+      "name": "Web3 Careers",
+      "domain": "web3.career",
+      "mode": "discovery"
+    }
+  ],
+  "posting_url_policy": {
+    "prefer_direct_employer_or_ats": true,
+    "linkedin_urls_may_not_be_final_application_urls": true,
+    "verify_discovery_leads_against_live_posting": true
+  },
+  "approval_required_before_submission": true
+}
+
+

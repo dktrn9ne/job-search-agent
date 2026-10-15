@@ -1,0 +1,14 @@
+.chip.learned{background:#edf4da;border-color:#d7e7aa;color:#496b35}
+.preference-row{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 14px;font-size:9px;color:var(--muted)}
+.signal-button{border:1px solid var(--line);background:#fafcf7;border-radius:999px;padding:5px 9px;font-size:9px}
+.signal-button.active{background:#e4f0c8;border-color:#bfd878;color:#42652f}
+.signal-button.active.negative{background:#f5e9e2;border-color:#e4c5b8;color:#8d5546}
+.learning-card{background:#f7f9f2}
+.term-list{display:flex;flex-wrap:wrap;gap:5px;margin:11px 0}
+.term-list span{font-size:8px;background:#e8efdb;color:#597148;border-radius:999px;padding:5px 8px}
+.agent-ready{border-color:#cfe28e;background:#fbfdf4}.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#82a83d;margin-right:6px;box-shadow:0 0 0 4px #eaf3d1}
+.status-dot.pending{background:#b48a3c;box-shadow:0 0 0 4px #f5ead2}
+.sources-card{background:#f4f7f1}.source-list{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.source-list span{font-size:8px;font-weight:700;background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 8px}
+.answer-bank-grid{display:grid;gap:18px;max-width:1080px}.answer-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:24px}.answer-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-bottom:18px}.answer-card-head h2{font-size:17px;line-height:1.45;margin-top:7px;max-width:760px}.answer-card-head .button{flex-shrink:0}.answer-support{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}.answer-support section{background:#f7f9f2;border:1px solid #e5eadf;border-radius:9px;padding:15px}.answer-support strong{font-size:10px}.answer-support ul{padding-left:17px;margin:9px 0 0;color:#667a60;font-size:10px;line-height:1.7}.answer-support p{font-size:10px;color:#7a6853;margin:7px 0 0}.answer-support .guardrail{background:#fbf7eb;border-color:#eee3c8}.answer-bank-actions{display:flex;gap:9px;position:sticky;bottom:12px;background:#f8faf4e8;border:1px solid var(--line);backdrop-filter:blur(8px);border-radius:10px;padding:12px}.answer-picker{margin:20px 0}.answer-pick{display:block;width:100%;text-align:left;border:1px solid var(--line);background:#fafcf7;border-radius:8px;padding:11px 13px;margin:8px 0}.answer-pick span{display:block;color:#6d8462;font-size:8px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;margin-bottom:5px}.answer-pick strong{font-size:10px;line-height:1.45}.answer-pick:hover{background:#f0f5e4;border-color:#cfdda7}@media(max-width:650px){.answer-card{padding:18px}.answer-card-head{display:block}.answer-card-head .button{margin-top:12px}.answer-support{grid-template-columns:1fr}.answer-bank-actions{position:static;flex-wrap:wrap}}
+
+

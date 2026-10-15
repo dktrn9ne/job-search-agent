@@ -1,0 +1,246 @@
+{
+  "schema_version": "checkchaser.research_request.v1",
+  "request_id": "maurice-60-role-continuous-search",
+  "candidate": {
+    "name": "Maurice Thomas",
+    "authorized_to_work_in_united_states": true,
+    "requires_sponsorship_now_or_future": false
+  },
+  "objective": {
+    "daily_unique_verified_target": 60,
+    "quality_over_quota": true,
+    "allow_fewer_when_evidence_is_insufficient": true,
+    "never_invent_or_pad_results": true
+  },
+  "schedule": {
+    "timezone": "America/Chicago",
+    "mode": "rolling_daily",
+    "run_windows": [
+      {
+        "local_time": "00:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "04:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "08:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "12:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "16:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "20:15",
+        "target_new_roles": 10
+      }
+    ],
+    "carry_forward_shortfall_within_same_day": true,
+    "daily_reset_local_time": "00:00"
+  },
+  "search_policy": {
+    "minimum_fit_points": 85,
+    "maximum_fit_points": 100,
+    "minimum_base_usd": 110000,
+    "target_ceiling_usd": 360000,
+    "target_ceiling_is_hard_rejection": false,
+    "accepted_employment_types": [
+      "employee",
+      "contract",
+      "temporary"
+    ],
+    "hourly_annualization_hours": 2080,
+    "location_priority": [
+      "Remote - United States",
+      "Hybrid - Central Texas"
+    ],
+    "reject_locations_outside_priority": true,
+    "posting_verification_max_age_hours": 24,
+    "compensation_rules": {
+      "require_employer_posted_base_compensation": true,
+      "reject_estimated_compensation": true,
+      "reject_total_compensation_as_base": true,
+      "reject_bonus_commission_equity_as_base": true,
+      "hourly_contract_or_temporary_may_annualize": true
+    }
+  },
+  "target_roles": {
+    "primary": [
+      "AI Product Manager",
+      "Senior AI Product Manager",
+      "Principal AI Product Manager",
+      "Technical Product Manager - AI",
+      "Senior Technical Product Manager",
+      "AI Deployment Manager",
+      "AI Program Manager",
+      "Agentic AI Product Manager"
+    ],
+    "secondary": [
+      "AI Solutions Architect",
+      "AI Implementation Lead",
+      "AI Platform Product Manager",
+      "Generative AI Product Manager",
+      "LLM Product Manager",
+      "AI Evaluation Lead",
+      "AI Quality Lead",
+      "Agentic AI Engineer",
+      "Senior AI Software Engineer",
+      "Technical Program Manager - AI"
+    ],
+    "adjacent_when_score_is_85_or_higher": [
+      "Product Lead - AI",
+      "Director of AI Product",
+      "AI Operations Lead",
+      "AI Customer Success Lead",
+      "AI Transformation Lead",
+      "AI Automation Lead",
+      "Product Manager - Developer Platform",
+      "Product Manager - Data Platform"
+    ]
+  },
+  "approved_sources": [
+    {
+      "name": "Greenhouse",
+      "domain": "greenhouse.io",
+      "mode": "direct_ats"
+    },
+    {
+      "name": "Lever",
+      "domain": "jobs.lever.co",
+      "mode": "direct_ats"
+    },
+    {
+      "name": "Ashby",
+      "domain": "jobs.ashbyhq.com",
+      "mode": "direct_ats"
+    },
+    {
+      "name": "Dice",
+      "domain": "dice.com",
+      "mode": "discovery_then_verify_externally"
+    },
+    {
+      "name": "ZipRecruiter",
+      "domain": "ziprecruiter.com",
+      "mode": "discovery_then_verify_externally"
+    },
+    {
+      "name": "Indeed",
+      "domain": "indeed.com",
+      "mode": "discovery_then_verify_externally"
+    },
+    {
+      "name": "LinkedIn",
+      "domain": "linkedin.com",
+      "mode": "lead_only",
+      "requires_external_employer_application_url": true
+    },
+    {
+      "name": "Web3 Careers",
+      "domain": "web3.career",
+      "mode": "discovery_then_verify_externally"
+    },
+    {
+      "name": "Direct employer career pages",
+      "domain": "various",
+      "mode": "direct_employer"
+    }
+  ],
+  "search_rotation": {
+    "00:15": [
+      "Greenhouse",
+      "Lever",
+      "Ashby",
+      "Direct employer career pages"
+    ],
+    "04:15": [
+      "ZipRecruiter",
+      "Indeed"
+    ],
+    "08:15": [
+      "LinkedIn",
+      "Direct employer career pages"
+    ],
+    "12:15": [
+      "Dice",
+      "Greenhouse",
+      "Lever",
+      "Ashby"
+    ],
+    "16:15": [
+      "Indeed",
+      "ZipRecruiter",
+      "Direct employer career pages"
+    ],
+    "20:15": [
+      "Web3 Careers",
+      "LinkedIn",
+      "Greenhouse",
+      "Lever",
+      "Ashby"
+    ]
+  },
+  "required_verification": {
+    "posting_status": "open",
+    "specific_role_url_required": true,
+    "final_url_prefer_direct_employer_or_ats": true,
+    "verify_location_arrangement": true,
+    "verify_base_compensation": true,
+    "verify_work_authorization_compatibility": true,
+    "verify_mandatory_qualifications": true,
+    "identify_material_gaps": true,
+    "record_verification_timestamp_with_timezone": true
+  },
+  "deduplication": {
+    "compare_against_current_day": true,
+    "compare_against_all_prior_batches": true,
+    "compare_against_application_history": true,
+    "identity_fields": [
+      "canonical_url",
+      "requisition_id",
+      "company_and_title"
+    ],
+    "never_repeat_already_applied_roles": true,
+    "merge_duplicate_source_urls": true
+  },
+  "ranking": {
+    "priority_order": [
+      "fit_points_descending",
+      "remote_before_texas_hybrid",
+      "freshest_verified_posting",
+      "fewest_material_gaps",
+      "highest_employer_posted_base_minimum"
+    ],
+    "use_application_history_as_context": true,
+    "history_may_change_eligibility": false,
+    "answer_bank_may_support_fit_assessment": true,
+    "answer_bank_guardrails_are_mandatory": true
+  },
+  "safety": {
+    "research_only": true,
+    "approval_required_before_application": true,
+    "do_not_submit_applications": true,
+    "do_not_answer_screening_questions_externally": true,
+    "do_not_contact_employers_or_recruiters": true,
+    "do_not_transmit_personal_information": true,
+    "exclude_household_income_statement": true
+  },
+  "daily_output": {
+    "format": "checkchaser.research_batch.v1",
+    "maximum_unique_roles": 60,
+    "approval_status": "awaiting_review",
+    "include_run_summary": true,
+    "include_source_coverage": true,
+    "include_rejection_counts_by_reason": true,
+    "include_unfilled_target_count": true,
+    "include_jobs_array": true
+  }
+}
+
+

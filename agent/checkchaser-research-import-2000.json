@@ -1,0 +1,172 @@
+{
+  "schema_version": "checkchaser.research_batch.v1",
+  "generated_at": "2026-10-14T00:00:00-05:00",
+  "summary": "Import-ready CheckChaser research file. The job-search agent may populate jobs with up to 2,000 verified role records.",
+  "capacity": {
+    "maximum_jobs": 2000,
+    "daily_unique_verified_target": 60,
+    "quality_over_quota": true,
+    "allow_fewer_when_evidence_is_insufficient": true
+  },
+  "policy": {
+    "minimum_base_usd": 110000,
+    "target_ceiling_usd": 360000,
+    "verification_max_age_hours": 24,
+    "minimum_fit_points": 85,
+    "maximum_fit_points": 100,
+    "location_priority": [
+      "Remote - United States",
+      "Hybrid - Central Texas"
+    ],
+    "employment_types": [
+      "employee",
+      "contract",
+      "temporary"
+    ],
+    "work_authorization": {
+      "authorized_in_united_states": true,
+      "requires_sponsorship_now_or_future": false
+    },
+    "approval_required_before_submission": true
+  },
+  "research_request": {
+    "mode": "rolling_daily",
+    "timezone": "America/Chicago",
+    "daily_unique_verified_target": 60,
+    "run_windows": [
+      {
+        "local_time": "00:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "04:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "08:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "12:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "16:15",
+        "target_new_roles": 10
+      },
+      {
+        "local_time": "20:15",
+        "target_new_roles": 10
+      }
+    ],
+    "approved_sources": [
+      "greenhouse.io",
+      "jobs.lever.co",
+      "jobs.ashbyhq.com",
+      "dice.com",
+      "ziprecruiter.com",
+      "indeed.com",
+      "linkedin.com as lead-only",
+      "web3.career",
+      "direct employer career pages"
+    ],
+    "target_roles": [
+      "AI Product Manager",
+      "Senior AI Product Manager",
+      "Principal AI Product Manager",
+      "Technical Product Manager - AI",
+      "Senior Technical Product Manager",
+      "AI Deployment Manager",
+      "AI Program Manager",
+      "Agentic AI Product Manager",
+      "AI Solutions Architect",
+      "AI Implementation Lead",
+      "AI Platform Product Manager",
+      "Generative AI Product Manager",
+      "LLM Product Manager",
+      "AI Evaluation Lead",
+      "AI Quality Lead",
+      "Agentic AI Engineer",
+      "Senior AI Software Engineer",
+      "Technical Program Manager - AI"
+    ],
+    "rules": [
+      "Return only live, role-specific posting URLs.",
+      "Verify aggregator leads against the employer or official ATS posting.",
+      "LinkedIn is lead-only and may not be the final application URL.",
+      "Compensation must be employer-posted base pay, not an estimate, OTE, equity, bonus, or total compensation.",
+      "Deduplicate against this jobs array and the history array.",
+      "Never invent or add weak roles to satisfy the daily target.",
+      "Do not submit applications or transmit candidate information."
+    ]
+  },
+  "job_record_schema": {
+    "required_fields": [
+      "company",
+      "title",
+      "url",
+      "posting_status",
+      "verified_at",
+      "verification_source",
+      "employment_type",
+      "location",
+      "arrangement",
+      "gates",
+      "compensation",
+      "fit_points",
+      "fit_rationale"
+    ],
+    "example": {
+      "company": "Example Company",
+      "title": "Senior AI Product Manager",
+      "url": "https://jobs.example.com/roles/123",
+      "requisition_id": "123",
+      "posting_status": "open",
+      "verified_at": "2026-10-14T12:00:00-05:00",
+      "verification_source": "Live employer posting",
+      "application_method": "External employer application",
+      "employment_type": "employee",
+      "location": "Remote - United States",
+      "arrangement": "Remote",
+      "gates": {
+        "location": {
+          "status": "pass",
+          "evidence": "Posting explicitly permits remote work in the United States."
+        },
+        "work_authorization": {
+          "status": "pass",
+          "evidence": "The posting does not conflict with the candidate's US work authorization and no-sponsorship requirement."
+        },
+        "qualifications": {
+          "status": "pass",
+          "evidence": "Mandatory qualifications are supported by the candidate's verified experience."
+        }
+      },
+      "compensation": {
+        "minimum": 150000,
+        "maximum": 200000,
+        "currency": "USD",
+        "type": "base",
+        "period": "year",
+        "source": "Employer-posted base salary range"
+      },
+      "fit_points": 90,
+      "fit_rationale": "Explain evidence-based strengths and every material qualification gap.",
+      "jd": "Concise requirement summary",
+      "approval_status": "awaiting_review"
+    }
+  },
+  "jobs": [],
+  "history": [],
+  "learning_context": {
+    "method": "Use prior preferences and outcomes to rank roles; never change eligibility evidence.",
+    "signals": []
+  },
+  "agent_run": {
+    "approval_required": true,
+    "submitted_externally": false,
+    "status": "ready_for_research"
+  }
+}
+
+
