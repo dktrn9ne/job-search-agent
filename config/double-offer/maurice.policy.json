@@ -1,0 +1,50 @@
+{
+  "schema_version": "double-offer.candidate.v1",
+  "candidate_id": "maurice",
+  "role_families": [
+    "AI Product Manager",
+    "Agentic AI Engineer",
+    "AI Solutions Engineer",
+    "AI Technical Program Manager",
+    "AI Automation Lead",
+    "Technical Product Manager"
+  ],
+  "salary_usd_base": {
+    "minimum": 120000,
+    "preferred": 175000,
+    "priority_minimum": 150000,
+    "unknown": "review"
+  },
+  "location": {
+    "anchor": "Pflugerville, TX",
+    "local_radius_miles": 30,
+    "allowed_local": [
+      "hybrid",
+      "onsite"
+    ],
+    "remote_us": true,
+    "remote_must_allow_texas": true,
+    "relocation": "requires_explicit_candidate_approval",
+    "unknown": "review"
+  },
+  "application": {
+    "daily_target_min": 30,
+    "daily_target_max": 60,
+    "submit_only_after_candidate_approval": true,
+    "approver_candidate_id": "maurice",
+    "deduplicate_by": [
+      "candidate_id",
+      "company",
+      "requisition_id"
+    ]
+  },
+  "communication": {
+    "approval_email": "mrthomaslmg@gmail.com",
+    "approval_links_require_authentication": true
+  },
+  "deadlines": {
+    "primary": "2026-11-26",
+    "final": "2027-01-01"
+  },
+  "deployment_status": "configuration_only"
+}
