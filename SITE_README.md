@@ -10,7 +10,7 @@ Parsing preserves source wording, recognizes common headings, and maps pipe-sepa
 
 Use Node 22.13+ or 24. `npm ci`, `npm test`, `npm run validate`, and `npm run build` validate and bundle the app. `npm run dev` also builds the locally served PDF.js worker and Mammoth bundle. Generated vendor assets are ignored by Git and recreated during deployment. The Mammoth browser bundle excludes its command-line argparse/sprintf dependency path; npm audit currently reports three moderate findings on that unused CLI path.
 
-Verification includes actual PDF/DOCX bytes, malformed JSON and schema errors, scanned/corrupt files, size/type limits, and selected-fact DOCX text extraction. Browser checks covered both upload formats, preview, persistence, fact selection, save and download; the downloaded DOCX was re-read to confirm selected facts were present and excluded facts absent.
+Verification includes actual PDF/DOCX bytes, malformed JSON and schema errors, scanned/corrupt files, size/type limits, and selected-fact DOCX text extraction. Browser checks covered both upload formats, preview, fact selection, save and download; the downloaded DOCX was re-read to confirm selected facts were present and excluded facts absent.
 
 A browser interface for the job-search-agent workflow, inspired by Jobmaxxer’s job queue, master CV editor, source-linked tailoring, exports and follow-ups.
 
