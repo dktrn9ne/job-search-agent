@@ -1,10 +1,20 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {rootCertificates} from 'node:tls';
+
+export function databasePoolConfig(databaseUrl){
+ const url=new URL(databaseUrl),local=['localhost','127.0.0.1','[::1]'].includes(url.hostname);
+ // pg otherwise replaces the verified SSL object with URL sslmode settings.
+ for(const key of ['ssl','sslmode','sslcert','sslkey','sslrootcert','uselibpqcompat'])url.searchParams.delete(key);
+ const supabase=url.hostname.endsWith('.supabase.com')||url.hostname.endsWith('.supabase.co');
+ const ca=supabase?[...rootCertificates,fs.readFileSync(new URL('./certs/supabase-prod-ca-2021.crt',import.meta.url),'utf8')]:undefined;
+ return {connectionString:url.href,max:3,connectionTimeoutMillis:10000,idleTimeoutMillis:10000,ssl:local?undefined:{rejectUnauthorized:true,...(ca?{ca}:{})}};
+}
 
 // Production must use durable Postgres. SQLite is deliberately local-only.
 export async function openStore({ databaseUrl=process.env.DATABASE_URL||process.env.POSTGRES_URL, localFile=process.env.PORTAL_LOCAL_DB }={}) {
  let pool, sqlite, chain=Promise.resolve();
- if(databaseUrl){const {Pool}=await import('pg');pool=new Pool({connectionString:databaseUrl,max:3,ssl:databaseUrl.includes('localhost')?undefined:{rejectUnauthorized:true}});}
+ if(databaseUrl){const {Pool}=await import('pg');pool=new Pool(databasePoolConfig(databaseUrl));}
  else if(localFile && !process.env.VERCEL){const {DatabaseSync}=await import('node:sqlite');fs.mkdirSync(path.dirname(path.resolve(localFile)),{recursive:true});sqlite=new DatabaseSync(localFile);sqlite.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;');}
  else throw Error('Persistent database is not configured');
  const run=async(sql,values=[],client=pool)=>{
