@@ -35,7 +35,24 @@ export function createPortal(store,{origin,operatorToken=''}={}){
    if(method==='POST'){
     if(request.headers.get('origin')!==allowed.origin)return json({error:'Invalid origin'},403);
     if(!request.headers.get('content-type')?.startsWith('application/json'))return json({error:'JSON required'},415);
-    const text=await request.text();if(Buffer.byteLength(text)>300000)return json({error:'Request too large'},413);body=JSON.parse(text);
+    const text=await request.text();if(Buffer.byteLength(text)>(action==='operator-import'?2000000:300000))return json({error:'Request too large'},413);body=JSON.parse(text);
+   }
+   if(action==='operator-import'){
+    if(method!=='POST'||operatorToken.length<32||!safeEqual(request.headers.get('authorization')||'','Bearer '+operatorToken))return json({error:'Unauthorized'},401);
+    const {importBundle}=await import('../scripts/portal-admin.mjs');
+    await store.transaction(async q=>{
+     const c=body.candidate||{};
+     if(!/^[a-z0-9-]{1,64}$/.test(c.id)||!/^\S+@\S+\.\S+$/.test(c.email)||typeof c.name!=='string'||!c.name.trim())throw Error('Invalid candidate');
+     const [old]=await q('SELECT email FROM portal_candidates WHERE id=$1',[c.id]);
+     if(old&&old.email!==c.email.toLowerCase())throw Error('Candidate identity changed');
+     if(!old){
+      if(c.passwordHash&&!/^[a-f0-9]{32}:[a-f0-9]{128}$/.test(c.passwordHash))throw Error('Invalid migrated credential');
+      await q('INSERT INTO portal_candidates VALUES ($1,$2,$3,$4,$5,$6)',[c.id,c.email.toLowerCase(),c.name,c.passwordHash||null,JSON.stringify(c.profile||{}),now()]);
+      await audit(q,c.id,null,'operator_account_imported','New account from private source; existing accounts never overwritten');
+     }
+     await importBundle({query:q,transaction:work=>work(q)},body);
+     await audit(q,c.id,null,'operator_queue_imported',JSON.stringify({roles:body.roles?.length||0,packages:body.packages?.length||0}));
+    });return json({ok:true,sent:false});
    }
    if(action==='invite'){
     if(method!=='POST'||operatorToken.length<32||!safeEqual(request.headers.get('authorization')||'','Bearer '+operatorToken))return json({error:'Unauthorized'},401);
