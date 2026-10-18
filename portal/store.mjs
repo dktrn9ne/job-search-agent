@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // Production must use durable Postgres. SQLite is deliberately local-only.
-export async function openStore({ databaseUrl=process.env.DATABASE_URL, localFile=process.env.PORTAL_LOCAL_DB }={}) {
+export async function openStore({ databaseUrl=process.env.DATABASE_URL||process.env.POSTGRES_URL, localFile=process.env.PORTAL_LOCAL_DB }={}) {
  let pool, sqlite, chain=Promise.resolve();
  if(databaseUrl){const {Pool}=await import('pg');pool=new Pool({connectionString:databaseUrl,max:3,ssl:databaseUrl.includes('localhost')?undefined:{rejectUnauthorized:true}});}
  else if(localFile && !process.env.VERCEL){const {DatabaseSync}=await import('node:sqlite');fs.mkdirSync(path.dirname(path.resolve(localFile)),{recursive:true});sqlite=new DatabaseSync(localFile);sqlite.exec('PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL;');}
