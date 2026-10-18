@@ -16,6 +16,8 @@ export async function openStore({ databaseUrl=process.env.DATABASE_URL, localFil
   if(pool){const c=await pool.connect();try{await c.query('BEGIN');const result=await work((s,v)=>run(s,v,c));await c.query('COMMIT');return result;}catch(e){await c.query('ROLLBACK');throw e;}finally{c.release();}}
   const task=chain.then(async()=>{sqlite.exec('BEGIN IMMEDIATE');try{const result=await work(run);sqlite.exec('COMMIT');return result;}catch(e){sqlite.exec('ROLLBACK');throw e;}});chain=task.catch(()=>{});return task;
  },async close(){if(pool)await pool.end();else sqlite.close();}};
+ await store.transaction(async run=>{
+ if(pool)await run('SELECT pg_advisory_xact_lock(3004183)');
  for(const sql of [
   'CREATE TABLE IF NOT EXISTS portal_candidates (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, name TEXT NOT NULL, password TEXT, profile TEXT NOT NULL, created_at TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS portal_invites (token_hash TEXT PRIMARY KEY, candidate_id TEXT NOT NULL REFERENCES portal_candidates(id), expires_at TEXT NOT NULL)',
@@ -31,8 +33,12 @@ export async function openStore({ databaseUrl=process.env.DATABASE_URL, localFil
  CREATE TRIGGER IF NOT EXISTS portal_audit_no_update BEFORE UPDATE ON portal_audit BEGIN SELECT RAISE(ABORT,'append_only'); END;
  CREATE TRIGGER IF NOT EXISTS portal_audit_no_delete BEFORE DELETE ON portal_audit BEGIN SELECT RAISE(ABORT,'append_only'); END;`);
  else {
+  // Supabase's browser-facing Data API must never expose these tables.
+  // No client policies: only the trusted database owner/service can query them.
+  for(const name of ['candidates','invites','sessions','attempts','roles','packages','audit'])await run('ALTER TABLE portal_'+name+' ENABLE ROW LEVEL SECURITY');
   await run("CREATE OR REPLACE FUNCTION portal_deny_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'immutable_record'; END; $$");
   await run("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='portal_package_immutable') THEN CREATE TRIGGER portal_package_immutable BEFORE UPDATE OF candidate_id,version,digest,payload ON portal_packages FOR EACH ROW EXECUTE FUNCTION portal_deny_mutation(); END IF; IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='portal_audit_immutable') THEN CREATE TRIGGER portal_audit_immutable BEFORE UPDATE OR DELETE ON portal_audit FOR EACH ROW EXECUTE FUNCTION portal_deny_mutation(); END IF; END $$");
  }
+ });
  return store;
 }
