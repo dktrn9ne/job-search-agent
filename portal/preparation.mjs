@@ -19,7 +19,8 @@ export function preparationView(row,role,packages){
  const linked=packages.filter(x=>{const s=typeof x.payload==='string'?JSON.parse(x.payload):x.payload;return s.company?.trim().toLowerCase()===p.company?.trim().toLowerCase()&&s.requisition_id===p.requisition_id&&!['superseded','rejected'].includes(x.state);});
  const outstanding=detail.questions.filter(x=>!detail.answers?.[x.id]?.trim());
  let state=row.state;
- if(state!=='cancelled'&&linked.some(x=>x.state==='pending'))state='ready_for_approval';
+ if(state!=='cancelled'&&outstanding.length)state='needs_answers';
+ else if(state!=='cancelled'&&linked.some(x=>x.state==='pending'))state='ready_for_approval';
  else if(state!=='cancelled'&&linked.some(x=>x.state==='approved'))state='approved_unsent';
  const steps={queued:['Preparation queued','We will verify the role and prepare your materials. No action needed yet.'],preparing:['Preparing materials','Your posting, evidence and documents are being reviewed.'],needs_answers:['Needs your answers','Answer the questions below so preparation can continue.'],answers_received:['Answers received','Your answers are saved for the preparer to review.'],ready_for_approval:['Ready for your approval','Open each application or outreach package and review its exact version.'],approved_unsent:['Approved · unsent','Your approval is saved. Submission remains a separate user-driven step.'],blocked:['Preparation blocked','Review the blocker below; nothing will be submitted.'],cancelled:['Preparation stopped','Choose Pursue again to request preparation.']};
  const [label,next_step]=steps[state]||steps.queued;
