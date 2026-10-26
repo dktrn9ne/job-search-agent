@@ -25,3 +25,12 @@ For an existing local workspace, use `node scripts/portal-sync.mjs PRIVATE_BUNDL
 The connected hosted PostgreSQL flow passed 28 checks on October 18, 2026: authentication/cookies, two-candidate isolation, private documents, exact-version and concurrent decisions, audit events, invitations, CSRF, and logout. Test accounts contain synthetic data and random credentials; their sessions were logged out. Password reset/account recovery and candidate digest delivery are not implemented in this portal. Existing external search/digest schedules are unchanged.
 
 `npm test` covers owner isolation, exact-version approval, concurrent decisions, immutable content/audits, invitations, session expiry, CSRF, logout, resume ownership, placeholder rejection and throttling. Login throttling is per account, not a substitute for platform-wide abuse controls.
+
+
+## Pursue handoff
+
+Pursue creates a durable, candidate-owned preparation request. Existing pursued roles are backfilled on workspace/operator reads; Pass cancels preparation. The **My next steps** tab shows preparation, missing questions, candidate answers, linked application/outreach packages and approved-but-unsent status. Package approval remains separate and never submits anything.
+
+Trusted preparation operators pull an owner-specific snapshot with `node scripts/portal-work.mjs pull HTTPS_ORIGIN PRIVATE_OPERATOR_JSON PRIVATE_OUTPUT_JSON candidate-id`. This contains only that candidate's pursued roles, profile and preparation tasks, never authentication secrets or PDF bytes. Use the returned role digest and task revision in a private update JSON: `{candidate_id, role_id, role_digest, revision, state, summary, questions:[{id,prompt}]}`. Run `node scripts/portal-work.mjs update HTTPS_ORIGIN PRIVATE_OPERATOR_JSON PRIVATE_UPDATE_JSON`. Allowed operator stages are preparing, needs_answers and blocked. Candidate answers stay separate from operator questions and are audited; stale revisions are rejected. Importing a matching exact-version package makes its review link appear automatically.
+
+This is a durable handoff to the existing trusted preparation workflow, not an unattended application sender or an embedded generation worker. Operators must pull and process requests; saved answers return to that work queue. The dashboard does not claim a submission happened. All eight private tables use RLS without browser policies.

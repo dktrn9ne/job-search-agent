@@ -48,3 +48,30 @@ test('persistent throttling limits login attempts and Vercel cannot fall back to
 });
 test('operator import is authenticated, atomic and preserves candidate credentials and profile',async t=>{const x=await setup(t);const row=(await x.store.query('SELECT password FROM portal_candidates WHERE id=$1',['maurice']))[0];const bundle={candidate:{id:'new-candidate',name:'New Candidate',email:'new@example.test',passwordHash:row.password,profile:{answers:{location:'Original'}}},roles:[],packages:[]};assert.equal((await x.request('operator-import',bundle)).status,401);assert.equal((await x.request('operator-import',bundle,x.accounts.maurice)).status,401);const headers={Authorization:'Bearer '+'x'.repeat(40)};assert.equal((await x.request('operator-import',bundle,'',headers)).status,200);const login=await x.request('login',{email:'new@example.test',password:'Strong-test-passphrase-123'});assert.equal(login.status,200);bundle.candidate.profile={answers:{location:'Overwrite'}};bundle.candidate.passwordHash='0'.repeat(32)+':'+ '0'.repeat(128);assert.equal((await x.request('operator-import',bundle,'',headers)).status,200);assert.equal((await x.request('workspace',null,login.cookie)).body.candidate.profile.answers.location,'Original');const bad=structuredClone(bundle);bad.candidate.id='rollback';bad.candidate.email='rollback@example.test';bad.roles=[{candidate_id:'maurice',review_id:'wrong'}];assert.equal((await x.request('operator-import',bad,'',headers)).status,500);assert.equal((await x.store.query('SELECT id FROM portal_candidates WHERE id=$1',['rollback'])).length,0);});
 test('database TLS verifies Supabase CA and cannot be disabled by URL settings',async()=>{const {databasePoolConfig}=await import('../portal/store.mjs');const config=databasePoolConfig('postgres://u:p@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require');assert.equal(config.ssl.rejectUnauthorized,true);assert.ok(config.ssl.ca.some(c=>c.includes('BEGIN CERTIFICATE')));assert.equal(new URL(config.connectionString).searchParams.has('sslmode'),false);assert.equal(databasePoolConfig('postgres://u:p@localhost.attacker.test/db?ssl=no-verify').ssl.rejectUnauthorized,true);assert.equal(databasePoolConfig('postgres://u:p@localhost/db').ssl,undefined);});
+
+test('pursue backfill, questions, scoped answers, cancellation and linked approvals remain distinct',async t=>{
+ const x=await setup(t),c=x.accounts.maurice,headers={Authorization:'Bearer '+'x'.repeat(40)};
+ let role=(await x.request('workspace',null,c)).body.roles[0];
+ await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pursue',note:'Prepare'},c);
+ let w=(await x.request('workspace',null,c)).body,task=w.preparation[0];assert.equal(task.state,'queued');
+ assert.equal((await x.request('workspace',null,x.accounts.roxanne)).body.preparation.length,0);
+ assert.equal((await x.request('operator-work&candidate_id=maurice',null,c)).status,401);
+ const update={candidate_id:'maurice',role_id:role.id,role_digest:role.digest,revision:task.revision,state:'needs_answers',summary:'Confirm experience',questions:[{id:'years',prompt:'What years can you substantiate?'}]};
+ assert.equal((await x.request('operator-preparation',update,'',headers)).status,200);
+ assert.equal((await x.request('operator-preparation',update,'',headers)).status,409);
+ task=(await x.request('workspace',null,c)).body.preparation[0];
+ assert.equal((await x.request('preparation-answers',{role_id:role.id,revision:task.revision,answers:{years:'One'}},x.accounts.roxanne)).status,409);
+ assert.equal((await x.request('preparation-answers',{role_id:role.id,revision:task.revision,answers:{invented:'No'}},c)).status,400);
+ assert.equal((await x.request('preparation-answers',{role_id:role.id,revision:task.revision,answers:{years:'One'}},c)).status,200);
+ w=(await x.request('workspace',null,c)).body;assert.equal(w.preparation[0].state,'answers_received');assert.equal(w.preparation[0].answers.years,'One');assert.equal(w.packages[0].state,'pending');
+ await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pass',note:''},c);assert.equal((await x.request('workspace',null,c)).body.preparation[0].state,'cancelled');
+ assert.equal((await x.request('operator-preparation',{...update,revision:w.preparation[0].revision},'',headers)).status,409);
+ // Legacy pursued rows are backfilled on operator read without another click.
+ await x.store.query('UPDATE portal_roles SET decision=$1 WHERE id=$2',['pursue',role.id]);
+ assert.equal((await x.request('operator-work&candidate_id=maurice',null,'',headers)).body.preparation[0].state,'queued');
+ await importBundle(x.store,{candidate:{id:'maurice'},roles:[{...role.payload,requisition_id:'req'}]});
+ role=(await x.request('workspace',null,c)).body.roles[0];await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pursue',note:''},c);
+ assert.equal((await x.request('workspace',null,c)).body.preparation[0].state,'ready_for_approval');
+ const pack=(await x.request('package&id=maurice:p1',null,c)).body;await x.request('package-decision',{id:pack.id,digest:pack.digest,decision:'approve'},c);
+ assert.equal((await x.request('workspace',null,c)).body.preparation[0].state,'approved_unsent');
+});

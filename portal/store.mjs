@@ -36,6 +36,7 @@ export async function openStore({ databaseUrl=process.env.DATABASE_URL||process.
   'CREATE TABLE IF NOT EXISTS portal_roles (id TEXT PRIMARY KEY, candidate_id TEXT NOT NULL REFERENCES portal_candidates(id), digest TEXT NOT NULL, payload TEXT NOT NULL, decision TEXT NOT NULL, note TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS portal_packages (id TEXT PRIMARY KEY, candidate_id TEXT NOT NULL REFERENCES portal_candidates(id), version INTEGER NOT NULL, digest TEXT NOT NULL, payload TEXT NOT NULL, state TEXT NOT NULL, created_at TEXT NOT NULL)',
   'CREATE TABLE IF NOT EXISTS portal_audit (id TEXT PRIMARY KEY, candidate_id TEXT NOT NULL REFERENCES portal_candidates(id), item_id TEXT, action TEXT NOT NULL, detail TEXT NOT NULL, created_at TEXT NOT NULL)',
+  'CREATE TABLE IF NOT EXISTS portal_preparation (role_id TEXT PRIMARY KEY REFERENCES portal_roles(id), candidate_id TEXT NOT NULL REFERENCES portal_candidates(id), role_digest TEXT NOT NULL, state TEXT NOT NULL, detail TEXT NOT NULL, created_at TEXT NOT NULL, updated_at TEXT NOT NULL)',
   'CREATE INDEX IF NOT EXISTS portal_roles_owner ON portal_roles(candidate_id)',
   'CREATE INDEX IF NOT EXISTS portal_packages_owner ON portal_packages(candidate_id)'
  ])await run(sql);
@@ -45,7 +46,7 @@ export async function openStore({ databaseUrl=process.env.DATABASE_URL||process.
  else {
   // Supabase's browser-facing Data API must never expose these tables.
   // No client policies: only the trusted database owner/service can query them.
-  for(const name of ['candidates','invites','sessions','attempts','roles','packages','audit'])await run('ALTER TABLE portal_'+name+' ENABLE ROW LEVEL SECURITY');
+  for(const name of ['candidates','invites','sessions','attempts','roles','packages','audit','preparation'])await run('ALTER TABLE portal_'+name+' ENABLE ROW LEVEL SECURITY');
   await run("CREATE OR REPLACE FUNCTION portal_deny_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'immutable_record'; END; $$");
   await run("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='portal_package_immutable') THEN CREATE TRIGGER portal_package_immutable BEFORE UPDATE OF candidate_id,version,digest,payload ON portal_packages FOR EACH ROW EXECUTE FUNCTION portal_deny_mutation(); END IF; IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='portal_audit_immutable') THEN CREATE TRIGGER portal_audit_immutable BEFORE UPDATE OR DELETE ON portal_audit FOR EACH ROW EXECUTE FUNCTION portal_deny_mutation(); END IF; END $$");
  }

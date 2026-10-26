@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import {promisify} from 'node:util';
+import {reconcilePreparation,preparationView} from './preparation.mjs';
 const scrypt=promisify(crypto.scrypt), sha=s=>crypto.createHash('sha256').update(s).digest('hex');
 export const digest=value=>sha(JSON.stringify(value));
 const now=()=>new Date().toISOString(), future=hours=>new Date(Date.now()+hours*3600000).toISOString();
@@ -36,6 +37,25 @@ export function createPortal(store,{origin,operatorToken=''}={}){
     if(request.headers.get('origin')!==allowed.origin)return json({error:'Invalid origin'},403);
     if(!request.headers.get('content-type')?.startsWith('application/json'))return json({error:'JSON required'},415);
     const text=await request.text();if(Buffer.byteLength(text)>(action==='operator-import'?2000000:300000))return json({error:'Request too large'},413);body=JSON.parse(text);
+   }
+   if(action==='operator-work'||action==='operator-preparation'){
+    if(operatorToken.length<32||!safeEqual(request.headers.get('authorization')||'','Bearer '+operatorToken))return json({error:'Unauthorized'},401);
+    const owner=method==='GET'?url.searchParams.get('candidate_id'):body.candidate_id;
+    if(!/^[a-z0-9-]{1,64}$/.test(owner||''))return json({error:'Candidate required'},400);
+    if(action==='operator-work'&&method==='GET')return store.transaction(async q=>{
+     const [candidate]=await q('SELECT id,name,profile FROM portal_candidates WHERE id=$1',[owner]);if(!candidate)return json({error:'Not found'},404);
+     const rows=await reconcilePreparation(q,owner),roles=await q('SELECT * FROM portal_roles WHERE candidate_id=$1',[owner]),packages=await q('SELECT id,state,payload FROM portal_packages WHERE candidate_id=$1',[owner]);
+     return json({candidate:{...candidate,profile:JSON.parse(candidate.profile)},roles:roles.filter(r=>r.decision==='pursue').map(r=>({...r,payload:JSON.parse(r.payload)})),preparation:rows.filter(r=>r.state!=='cancelled').map(r=>preparationView(r,roles.find(x=>x.id===r.role_id),packages)),sent:false});
+    });
+    if(action==='operator-preparation'&&method==='POST')return store.transaction(async q=>{
+     await reconcilePreparation(q,owner);
+     const [r]=await q('SELECT * FROM portal_roles WHERE id=$1 AND candidate_id=$2',[body.role_id,owner]),[task]=await q('SELECT * FROM portal_preparation WHERE role_id=$1 AND candidate_id=$2',[body.role_id,owner]);
+     if(!r||r.decision!=='pursue'||r.digest!==body.role_digest||!task||preparationView(task,r,[]).revision!==body.revision)return json({error:'Stale preparation; refresh before updating'},409);
+     if(!['preparing','needs_answers','blocked'].includes(body.state)||typeof body.summary!=='string'||body.summary.length>6000||!Array.isArray(body.questions)||body.questions.length>20||body.questions.some(x=>!x||! /^[a-z0-9-]{1,64}$/.test(x.id)||typeof x.prompt!=='string'||!x.prompt.trim()||x.prompt.length>2000)||new Set(body.questions.map(x=>x.id)).size!==body.questions.length)return json({error:'Invalid preparation update'},400);
+     const detail={...JSON.parse(task.detail),summary:body.summary,questions:body.questions.map(x=>({id:x.id,prompt:x.prompt}))};
+     const updated=await q('UPDATE portal_preparation SET state=$1,detail=$2,updated_at=$3 WHERE role_id=$4 AND candidate_id=$5 AND detail=$6 AND updated_at=$7 RETURNING role_id',[body.state,JSON.stringify(detail),now(),r.id,owner,task.detail,task.updated_at]);if(!updated.length)return json({error:'Stale preparation; refresh first'},409);await audit(q,owner,r.id,'preparation_'+body.state,body.summary);return json({ok:true,sent:false});
+    });
+    return json({error:'Method not allowed'},405);
    }
    if(action==='operator-import'){
     if(method!=='POST'||operatorToken.length<32||!safeEqual(request.headers.get('authorization')||'','Bearer '+operatorToken))return json({error:'Unauthorized'},401);
@@ -85,7 +105,8 @@ export function createPortal(store,{origin,operatorToken=''}={}){
     const [c]=await store.query('SELECT id,name,email,profile FROM portal_candidates WHERE id=$1',[owner]);
     const roles=await store.query('SELECT * FROM portal_roles WHERE candidate_id=$1 ORDER BY id',[owner]);
     const packages=await store.query('SELECT id,version,digest,state,created_at,payload FROM portal_packages WHERE candidate_id=$1 ORDER BY created_at DESC',[owner]);
-    return json({candidate:{...c,profile:JSON.parse(c.profile)},roles:roles.map(r=>({...r,payload:JSON.parse(r.payload)})),packages:packages.map(p=>{const s=JSON.parse(p.payload);return {...p,payload:{...s,documents:(s.documents||[]).map(({contentBase64,reviewedText,...d})=>d)}};}),employerSendingEnabled:false});
+    const tasks=await store.transaction(q=>reconcilePreparation(q,owner));
+    return json({candidate:{...c,profile:JSON.parse(c.profile)},roles:roles.map(r=>({...r,payload:JSON.parse(r.payload)})),preparation:tasks.map(t=>preparationView(t,roles.find(r=>r.id===t.role_id),packages)),packages:packages.map(p=>{const s=JSON.parse(p.payload);return {...p,payload:{...s,documents:(s.documents||[]).map(({contentBase64,reviewedText,...d})=>d)}};}),employerSendingEnabled:false});
    }
    if(action==='package'&&method==='GET'){
     const [p]=await store.query('SELECT * FROM portal_packages WHERE id=$1 AND candidate_id=$2',[url.searchParams.get('id')||'',owner]);if(!p)return json({error:'Not found'},404);
@@ -102,8 +123,15 @@ export function createPortal(store,{origin,operatorToken=''}={}){
    }
    if(action==='role-decision'&&method==='POST'){
     if(!['pursue','pass','needs_changes'].includes(body.decision)||typeof body.note!=='string'||body.note.length>2000)return json({error:'Invalid decision'},400);
-    return await store.transaction(async q=>{const r=await q('UPDATE portal_roles SET decision=$1,note=$2 WHERE id=$3 AND candidate_id=$4 AND digest=$5 RETURNING id',[body.decision,body.note,body.id,owner,body.digest]);if(!r.length)return json({error:'Stale role or not found'},409);await audit(q,owner,body.id,'role_'+body.decision,body.note);return json({ok:true,applicationApproved:false});});
+    return await store.transaction(async q=>{const r=await q('UPDATE portal_roles SET decision=$1,note=$2 WHERE id=$3 AND candidate_id=$4 AND digest=$5 RETURNING id',[body.decision,body.note,body.id,owner,body.digest]);if(!r.length)return json({error:'Stale role or not found'},409);await audit(q,owner,body.id,'role_'+body.decision,body.note);await reconcilePreparation(q,owner);return json({ok:true,applicationApproved:false,preparationQueued:body.decision==='pursue'});});
    }
+   if(action==='preparation-answers'&&method==='POST')return store.transaction(async q=>{
+    await reconcilePreparation(q,owner);const [r]=await q('SELECT * FROM portal_roles WHERE id=$1 AND candidate_id=$2',[body.role_id,owner]),[task]=await q('SELECT * FROM portal_preparation WHERE role_id=$1 AND candidate_id=$2',[body.role_id,owner]);
+    if(!r||r.decision!=='pursue'||!task||preparationView(task,r,[]).revision!==body.revision)return json({error:'Stale questions; refresh first'},409);
+    const detail=JSON.parse(task.detail);if(!body.answers||Array.isArray(body.answers)||typeof body.answers!=='object'||Object.entries(body.answers).some(([k,v])=>!detail.questions.some(x=>x.id===k)||typeof v!=='string'||v.length>6000))return json({error:'Invalid answers'},400);
+    detail.answers={...detail.answers,...body.answers};const outstanding=detail.questions.some(x=>!detail.answers[x.id]?.trim());
+    const updated=await q('UPDATE portal_preparation SET state=$1,detail=$2,updated_at=$3 WHERE role_id=$4 AND candidate_id=$5 AND detail=$6 AND updated_at=$7 RETURNING role_id',[outstanding?'needs_answers':'answers_received',JSON.stringify(detail),now(),r.id,owner,task.detail,task.updated_at]);if(!updated.length)return json({error:'Stale questions; refresh first'},409);await audit(q,owner,r.id,'preparation_answers_saved','Candidate answers saved; package approvals unchanged');return json({ok:true,sent:false});
+   });
    if(action==='package-decision'&&method==='POST'){
     if(!['approve','reject','needs_changes'].includes(body.decision))return json({error:'Invalid decision'},400);
     return await store.transaction(async q=>{const [p]=await q('SELECT * FROM portal_packages WHERE id=$1 AND candidate_id=$2',[body.id,owner]);if(!p||p.digest!==body.digest||digest(JSON.parse(p.payload))!==p.digest||p.state!=='pending')return json({error:'Stale package or not found'},409);
