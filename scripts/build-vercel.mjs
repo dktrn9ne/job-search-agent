@@ -1,4 +1,10 @@
-import { access, readdir } from 'node:fs/promises';
+import { access, readdir, mkdir, copyFile } from 'node:fs/promises';
+import { build } from 'esbuild';
+
+await mkdir('web/vendor', {recursive:true});
+await copyFile('node_modules/pdfjs-dist/legacy/build/pdf.mjs','web/vendor/pdf.mjs');
+await copyFile('node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs','web/vendor/pdf.worker.mjs');
+await build({entryPoints:['node_modules/mammoth/mammoth.browser.js'],bundle:true,format:'esm',platform:'browser',outfile:'web/vendor/mammoth.js',minify:true});
 
 const required = [
   'web/index.html',

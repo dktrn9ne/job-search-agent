@@ -1,0 +1,77 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';import os from 'node:os';import path from 'node:path';import crypto from 'node:crypto';
+import {openStore} from '../portal/store.mjs';
+import {inviteCandidate,createPortal,digest,validatePackage} from '../portal/service.mjs';
+import {importBundle} from '../scripts/portal-admin.mjs';
+async function setup(t){const dir=fs.mkdtempSync(path.join(os.tmpdir(),'private-portal-'));const store=await openStore({localFile:path.join(dir,'test.sqlite')});t.after(async()=>{await store.close();fs.rmSync(dir,{recursive:true,force:true});});const origin='http://127.0.0.1:4183',handle=createPortal(store,{origin,operatorToken:'x'.repeat(40)});
+ const request=async(action,body,cookie='',extra={})=>{const response=await handle(new Request(origin+'/api/portal?action='+action,{method:body?'POST':'GET',headers:{Origin:origin,'Content-Type':'application/json',Cookie:cookie,...extra},...(body?{body:JSON.stringify(body)}:{})}));return {status:response.status,body:await response.json(),cookie:response.headers.get('set-cookie')?.split(';')[0]};};
+ const accounts={};for(const id of ['maurice','roxanne']){const token=await inviteCandidate(store,{id,name:id,email:id+'@example.test'});const r=await request('activate',{token,password:'Strong-test-passphrase-123'});assert.equal(r.status,200);accounts[id]=r.cookie;accounts[id+'Invite']=token;}
+ const role={review_id:'R-1',candidate_id:'maurice',company:'Example',role:'Engineer',resume_track:'full-stack'};
+ const doc=kind=>{const data=Buffer.from('%PDF-1.7\n'+kind+' verified content');return {kind,filename:kind+'.pdf',contentBase64:data.toString('base64'),sha256:crypto.createHash('sha256').update(data).digest('hex'),reviewedText:'Substantive verified experience and candidate qualifications.'};};
+ const payload={company:'Example',role:'Engineer',requisition_id:'req',kind:'application',employer_content:{message:'Candidate application message'},documents:[doc('resume'),doc('cover')],submission_ready:false};
+ await importBundle(store,{candidate:{id:'maurice'},roles:[role],packages:[{id:'p1',candidate_id:'maurice',version:1,payload,state:'pending'}]});return {store,request,accounts,payload};}
+test('candidate isolation includes role lists, profile, PDFs, package details and decisions',async t=>{const x=await setup(t),m=x.accounts.maurice,r=x.accounts.roxanne;
+ assert.equal((await x.request('workspace')).status,401);assert.equal((await x.request('workspace',null,r)).body.roles.length,0);
+ const w=(await x.request('workspace',null,m)).body;assert.equal(w.roles.length,1);assert.equal(w.packages[0].payload.documents[0].contentBase64,undefined);
+ assert.equal((await x.request('package&id=maurice:p1',null,r)).status,404);assert.equal((await x.request('package&id=maurice:p1',null,m)).status,200);
+ const p=(await x.request('package&id=maurice:p1',null,m)).body;
+ assert.equal((await x.request('package-decision',{id:p.id,digest:p.digest,decision:'approve'},r)).status,409);
+ assert.equal((await x.request('role-decision',{id:w.roles[0].id,digest:w.roles[0].digest,decision:'pursue',note:''},r)).status,409);
+ await x.request('profile',{location:'Roxanne city'},r);assert.equal((await x.request('workspace',null,m)).body.candidate.profile.answers,undefined);
+});
+test('exact approval, stale digest, supersession, immutable records, and no employer transport',async t=>{const x=await setup(t),c=x.accounts.maurice;let p=(await x.request('package&id=maurice:p1',null,c)).body;
+ assert.equal((await x.request('package-decision',{id:p.id,digest:'bad',decision:'approve'},c)).status,409);
+ const results=await Promise.all([1,2].map(()=>x.request('package-decision',{id:p.id,digest:p.digest,decision:'approve'},c)));assert.deepEqual(results.map(r=>r.status).sort(),[200,409]);
+ await assert.rejects(x.store.query('UPDATE portal_packages SET payload=$1 WHERE id=$2',['{}',p.id]),/immutable/);
+ await assert.rejects(x.store.query('DELETE FROM portal_audit'),/append_only/);
+ await importBundle(x.store,{candidate:{id:'maurice'},packages:[{id:'p2',candidate_id:'maurice',version:2,payload:{...x.payload,employer_content:{message:'Updated message'}},state:'pending'}]});
+ assert.equal((await x.request('package&id=maurice:p1',null,c)).body.state,'superseded');assert.equal((await x.request('package-decision',{id:p.id,digest:p.digest,decision:'approve'},c)).status,409);
+ assert.equal((await x.request('apply/email',{},c)).status,404);assert.equal((await x.request('workspace',null,c)).body.employerSendingEnabled,false);
+});
+test('invites are single use; session expiry/logout and CSRF are enforced',async t=>{const x=await setup(t),c=x.accounts.maurice;
+ assert.equal((await x.request('activate',{token:x.accounts.mauriceInvite,password:'Strong-test-passphrase-123'})).status,401);
+ assert.equal((await x.request('profile',{location:'No'},c,{Origin:'https://evil.example'})).status,403);
+ assert.equal((await x.request('profile',{location:'No'},c,{'Content-Type':'text/plain'})).status,415);
+ const login=await x.request('login',{email:'maurice@example.test',password:'Strong-test-passphrase-123'});assert.equal(login.status,200);
+ await x.request('logout',{},c);assert.equal((await x.request('workspace',null,c)).status,401);
+ await x.store.query('UPDATE portal_sessions SET expires_at=$1',['2000-01-01']);assert.equal((await x.request('workspace',null,login.cookie)).status,401);
+});
+test('role selection is not package approval; changed roles reset preference; resume imports stay isolated',async t=>{const x=await setup(t),c=x.accounts.maurice,w=(await x.request('workspace',null,c)).body,role=w.roles[0];
+ const r=await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pursue',note:'Prepare'},c);assert.equal(r.body.applicationApproved,false);assert.equal((await x.request('package&id=maurice:p1',null,c)).body.state,'pending');
+ await importBundle(x.store,{candidate:{id:'maurice'},roles:[{...role.payload,role:'Changed role'}]});assert.equal((await x.request('workspace',null,c)).body.roles[0].decision,'unreviewed');
+ assert.equal((await x.request('resume',{label:'AI',filename:'resume.pdf',sha256:'a'.repeat(64),cv:{name:'Maurice',sections:[]}},c)).status,200);assert.equal((await x.request('workspace',null,x.accounts.roxanne)).body.candidate.profile.resumes,undefined);
+ assert.throws(()=>validatePackage({...x.payload,employer_content:{message:'placeholder'}}));assert.throws(()=>validatePackage({...x.payload,documents:[]}));
+});
+test('persistent throttling limits login attempts and Vercel cannot fall back to SQLite',async t=>{const x=await setup(t);let last;for(let i=0;i<11;i++)last=await x.request('login',{email:'unknown@example.test',password:'incorrect-password'});assert.equal(last.status,429);
+ const saved=process.env.VERCEL;process.env.VERCEL='1';try{await assert.rejects(openStore({databaseUrl:'',localFile:'ignored.sqlite'}),/Persistent database/);}finally{if(saved===undefined)delete process.env.VERCEL;else process.env.VERCEL=saved;}
+});
+test('operator import is authenticated, atomic and preserves candidate credentials and profile',async t=>{const x=await setup(t);const row=(await x.store.query('SELECT password FROM portal_candidates WHERE id=$1',['maurice']))[0];const bundle={candidate:{id:'new-candidate',name:'New Candidate',email:'new@example.test',passwordHash:row.password,profile:{answers:{location:'Original'}}},roles:[],packages:[]};assert.equal((await x.request('operator-import',bundle)).status,401);assert.equal((await x.request('operator-import',bundle,x.accounts.maurice)).status,401);const headers={Authorization:'Bearer '+'x'.repeat(40)};assert.equal((await x.request('operator-import',bundle,'',headers)).status,200);const login=await x.request('login',{email:'new@example.test',password:'Strong-test-passphrase-123'});assert.equal(login.status,200);bundle.candidate.profile={answers:{location:'Overwrite'}};bundle.candidate.passwordHash='0'.repeat(32)+':'+ '0'.repeat(128);assert.equal((await x.request('operator-import',bundle,'',headers)).status,200);assert.equal((await x.request('workspace',null,login.cookie)).body.candidate.profile.answers.location,'Original');const bad=structuredClone(bundle);bad.candidate.id='rollback';bad.candidate.email='rollback@example.test';bad.roles=[{candidate_id:'maurice',review_id:'wrong'}];assert.equal((await x.request('operator-import',bad,'',headers)).status,500);assert.equal((await x.store.query('SELECT id FROM portal_candidates WHERE id=$1',['rollback'])).length,0);});
+test('database TLS verifies Supabase CA and cannot be disabled by URL settings',async()=>{const {databasePoolConfig}=await import('../portal/store.mjs');const config=databasePoolConfig('postgres://u:p@aws-0-us-west-2.pooler.supabase.com:6543/postgres?sslmode=require');assert.equal(config.ssl.rejectUnauthorized,true);assert.ok(config.ssl.ca.some(c=>c.includes('BEGIN CERTIFICATE')));assert.equal(new URL(config.connectionString).searchParams.has('sslmode'),false);assert.equal(databasePoolConfig('postgres://u:p@localhost.attacker.test/db?ssl=no-verify').ssl.rejectUnauthorized,true);assert.equal(databasePoolConfig('postgres://u:p@localhost/db').ssl,undefined);});
+
+test('pursue backfill, questions, scoped answers, cancellation and linked approvals remain distinct',async t=>{
+ const x=await setup(t),c=x.accounts.maurice,headers={Authorization:'Bearer '+'x'.repeat(40)};
+ let role=(await x.request('workspace',null,c)).body.roles[0];
+ await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pursue',note:'Prepare'},c);
+ let w=(await x.request('workspace',null,c)).body,task=w.preparation[0];assert.equal(task.state,'queued');
+ assert.equal((await x.request('workspace',null,x.accounts.roxanne)).body.preparation.length,0);
+ assert.equal((await x.request('operator-work&candidate_id=maurice',null,c)).status,401);
+ const update={candidate_id:'maurice',role_id:role.id,role_digest:role.digest,revision:task.revision,state:'needs_answers',summary:'Confirm experience',questions:[{id:'years',prompt:'What years can you substantiate?'}]};
+ assert.equal((await x.request('operator-preparation',update,'',headers)).status,200);
+ assert.equal((await x.request('operator-preparation',update,'',headers)).status,409);
+ task=(await x.request('workspace',null,c)).body.preparation[0];
+ assert.equal((await x.request('preparation-answers',{role_id:role.id,revision:task.revision,answers:{years:'One'}},x.accounts.roxanne)).status,409);
+ assert.equal((await x.request('preparation-answers',{role_id:role.id,revision:task.revision,answers:{invented:'No'}},c)).status,400);
+ assert.equal((await x.request('preparation-answers',{role_id:role.id,revision:task.revision,answers:{years:'One'}},c)).status,200);
+ w=(await x.request('workspace',null,c)).body;assert.equal(w.preparation[0].state,'answers_received');assert.equal(w.preparation[0].answers.years,'One');assert.equal(w.packages[0].state,'pending');
+ await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pass',note:''},c);assert.equal((await x.request('workspace',null,c)).body.preparation[0].state,'cancelled');
+ assert.equal((await x.request('operator-preparation',{...update,revision:w.preparation[0].revision},'',headers)).status,409);
+ // Legacy pursued rows are backfilled on operator read without another click.
+ await x.store.query('UPDATE portal_roles SET decision=$1 WHERE id=$2',['pursue',role.id]);
+ assert.equal((await x.request('operator-work&candidate_id=maurice',null,'',headers)).body.preparation[0].state,'queued');
+ await importBundle(x.store,{candidate:{id:'maurice'},roles:[{...role.payload,requisition_id:'req'}]});
+ role=(await x.request('workspace',null,c)).body.roles[0];await x.request('role-decision',{id:role.id,digest:role.digest,decision:'pursue',note:''},c);
+ assert.equal((await x.request('workspace',null,c)).body.preparation[0].state,'ready_for_approval');
+ const pack=(await x.request('package&id=maurice:p1',null,c)).body;await x.request('package-decision',{id:pack.id,digest:pack.digest,decision:'approve'},c);
+ assert.equal((await x.request('workspace',null,c)).body.preparation[0].state,'approved_unsent');
+});
